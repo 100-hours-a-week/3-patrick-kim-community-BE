@@ -61,12 +61,6 @@ public class JwtUtil {
         return Integer.parseInt(claims.getSubject());
     }
 
-    // JWT 토큰에서 이메일 추출
-    public String getEmailFromToken(String token) {
-        Claims claims = parseClaims(token);
-        return claims.get("email", String.class);
-    }
-
     // JWT 토큰 검증
     public boolean validateToken(String token) {
         try {
