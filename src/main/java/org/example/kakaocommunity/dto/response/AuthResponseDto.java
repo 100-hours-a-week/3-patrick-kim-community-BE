@@ -17,8 +17,7 @@ public class AuthResponseDto {
     @Builder
     @AllArgsConstructor
     public static class LoginDto {
-        private String accessToken;
-        private String refreshToken;
+        private String sessionId;
     }
 
     @Getter

@@ -26,6 +26,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:3000")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH")
                 .allowedHeaders("*")
-                .allowCredentials(false);
+                .allowCredentials(true);  // 쿠키 전송을 위해 true로 설정
     }
 }

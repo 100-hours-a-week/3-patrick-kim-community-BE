@@ -1,11 +1,9 @@
 package org.example.kakaocommunity.global.security.resolver;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.NonNull;
 import org.example.kakaocommunity.global.security.annotation.LoginUser;
-import org.example.kakaocommunity.global.apiPayload.status.ErrorStatus;
-import org.example.kakaocommunity.global.exception.GeneralException;
 import org.springframework.core.MethodParameter;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -22,19 +20,12 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter,
+    public Object resolveArgument(@NonNull MethodParameter parameter,
                                    ModelAndViewContainer mavContainer,
                                    NativeWebRequest webRequest,
                                    WebDataBinderFactory binderFactory) throws Exception {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
-
-        }
-
-        // JWT 필터에서 설정한 userId를 반환
-        return Integer.parseInt(authentication.getName());
+        HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
+        return request.getAttribute("SESSION");
     }
 }
