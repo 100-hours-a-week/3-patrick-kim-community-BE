@@ -7,7 +7,7 @@ import org.example.kakaocommunity.global.exception.GeneralException;
 public class PostValidator {
      public static void validatePostOwnerShip(Post post, Integer memberId) {
             if (!post.getMember().getId().equals(memberId)) {
-                throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+                throw new GeneralException(ErrorStatus._NO_AUTHENTICATION);
             }
         }
 

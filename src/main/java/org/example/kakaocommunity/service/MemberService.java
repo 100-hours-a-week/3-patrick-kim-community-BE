@@ -15,8 +15,6 @@ import org.example.kakaocommunity.repository.RefreshTokenRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static org.example.kakaocommunity.mapper.MemberMapper.toUpdateDto;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -38,7 +36,7 @@ public class MemberService {
 
         // 현재 비밀번호 확인
         if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
-            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+            throw new GeneralException(ErrorStatus._NO_AUTHENTICATION);
         }
 
         // 새 비밀번호 암호화 및 저장

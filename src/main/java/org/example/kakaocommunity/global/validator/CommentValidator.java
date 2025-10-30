@@ -9,7 +9,7 @@ public class CommentValidator {
     public static void validateCommentOwnership(Comment comment, Integer memberId)
     {
         if(!comment.getMember().getId().equals(memberId))
-            throw new GeneralException(ErrorStatus._NO_AUTHENTICATION);
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
 
     }
 }

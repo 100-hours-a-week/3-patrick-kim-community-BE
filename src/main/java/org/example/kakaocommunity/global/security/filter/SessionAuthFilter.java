@@ -8,25 +8,34 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.kakaocommunity.MemberInfo;
 import org.example.kakaocommunity.global.apiPayload.code.ErrorReasonDto;
 import org.example.kakaocommunity.global.apiPayload.status.ErrorStatus;
+import org.example.kakaocommunity.global.exception.GeneralException;
 import org.example.kakaocommunity.infrastructure.SessionStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class SessionAuthFilter extends OncePerRequestFilter {
 
     private final SessionStore sessionStore;
+    private final HandlerExceptionResolver resolver;
+
+    public SessionAuthFilter(SessionStore sessionStore,
+                             @Qualifier("handlerExceptionResolver")
+                             HandlerExceptionResolver resolver) {
+        this.sessionStore = sessionStore;
+        this.resolver = resolver;
+    }
+
 
     private static final String[] EXCLUDED_PATHS = {
             "/users", "/auth", "/images", "/terms", "/privacy"
@@ -47,20 +56,23 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         try {
             String sessionId = extractSessionFromCookie(request.getCookies());
 
+            if (sessionId == null) throw new GeneralException(ErrorStatus._NO_AUTHENTICATION);
 
             // 세션 스토어 조회 , 검증
-            Optional<MemberInfo> memberInfo = sessionStore.findMemberBySessionId(sessionId);
+            MemberInfo memberInfo = sessionStore.findMemberBySessionId(sessionId).orElseThrow(
+                    () -> new GeneralException(ErrorStatus._NO_AUTHENTICATION)
+            );
 
-
-            request.setAttribute("SESSION", memberInfo.get().memberId());
+            request.setAttribute("SESSION", memberInfo.memberId());
 
             // 검증 완료 통과
             chain.doFilter(request, response);
-        } catch (Exception e) {
-            sessionExceptionHandler(response,ErrorStatus._UNAUTHORIZED);
+        } catch (GeneralException e) {
+            resolver.resolveException(request, response, null, e);
+            return;
         }
-    }
 
+    }
     // 세션추출
     private static String extractSessionFromCookie(Cookie[] cookies) {
         if (cookies == null) {
@@ -74,21 +86,4 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    //session handler
-    public void sessionExceptionHandler(HttpServletResponse response, ErrorStatus errorStatus) {
-        response.setStatus(errorStatus.getHttpStatus().value());
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        try {
-            String json = new ObjectMapper().writeValueAsString(ErrorReasonDto.builder().httpStatus(errorStatus.getHttpStatus())
-                    .isSuccess(false)
-                    .message("인증이 필요합니다.")
-                    .build() );
-            response.getWriter().write(json);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-
-    }
 }
