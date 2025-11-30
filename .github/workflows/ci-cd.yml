@@ -3,9 +3,7 @@ name: Backend CI/CD (Separated Jobs)
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
+
 
 jobs:
   # ===  CI (테스트 및 검증) ===
