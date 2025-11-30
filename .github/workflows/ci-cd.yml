@@ -1,9 +1,16 @@
-name: Backend CI/CD (Separated Jobs)
+name: Backend CI/CD (Root Project)
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 on:
   push:
     branches: [ "main" ]
-
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
 
 jobs:
   # ===  CI (테스트 및 검증) ===
@@ -44,9 +51,8 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Grant Execute Permission For Gradlew
-        run: chmod +x backend/gradlew
+        run: chmod +x gradlew
 
-      # 테스트 실행
       - name: Run Tests
         env:
           DB_HOST: localhost
@@ -57,23 +63,21 @@ jobs:
           S3_BUCKET_NAME: test-bucket
           AWS_ACCESS_KEY: test
           AWS_SECRET_KEY: test
-        run: cd backend && ./gradlew --info test
+        run: ./gradlew --info test
 
-      # 테스트 결과 발행
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: backend/build/test-results/**/*.xml
+          files: build/test-results/**/*.xml
 
-  # ===  CD (빌드 및 배포) ===
+  # === CD (빌드 및 배포) ===
   deployment:
     needs: integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      # ECR 로그인
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -85,17 +89,15 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      # Docker 이미지 빌드 및 Push
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_BE }}
           IMAGE_TAG: latest
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # EC2 배포 (Docker Compose + .env 방식)
       - name: Deploy to Backend EC2
         uses: appleboy/ssh-action@master
         with:
@@ -112,8 +114,8 @@ jobs:
             # .env 파일 생성
             rm -f .env
             echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-            echo "DB_NAME=kakao-community" >> .env
-            echo "DB_USERNAME=admin" >> .env
+            echo "DB_NAME=kimyuchan" >> .env
+            echo "DB_USERNAME=root" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> .env
