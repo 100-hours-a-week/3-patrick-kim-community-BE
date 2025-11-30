@@ -115,7 +115,7 @@ jobs:
             rm -f .env
             echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
             echo "DB_NAME=kakao-community" >> .env
-            echo "DB_USERNAME=root" >> .env
+            echo "DB_USERNAME=admin" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> .env
