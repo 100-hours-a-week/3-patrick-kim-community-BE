@@ -99,5 +99,5 @@ jobs:
             echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
             echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
 
-            sudo docker-compose up -d backend
+            sudo docker compose up -d backend
             sudo docker image prune -f
