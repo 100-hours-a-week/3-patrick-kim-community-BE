@@ -39,6 +39,7 @@ public class SecurityConfig {
 
                 // 요청 권한 설정
                 .authorizeHttpRequests(request -> request
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/health","/api/users", "/api/auth/**","/api/images","/api/terms","/api/privacy").permitAll()
                         .anyRequest().authenticated())
 
