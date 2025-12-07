@@ -20,15 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
         resolvers.add(loginUserArgumentResolver);
     }
 
-    // cors error 해결
-    @Override
-    public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH")
-                .allowedHeaders("*")
-                .allowCredentials(false);
-    }
+
 
     // 모든 API 경로에 /api 접두사 추가
     @Override
