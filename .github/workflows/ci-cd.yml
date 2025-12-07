@@ -86,7 +86,7 @@ jobs:
 
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             
-            sudo docker-compose pull backend
+            sudo docker compose pull backend
 
             # .env 파일 생성
             rm -f .env
