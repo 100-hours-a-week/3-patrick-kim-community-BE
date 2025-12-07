@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.kakaocommunity.global.security.resolver.LoginUserArgumentResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -23,9 +24,15 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(false);
+    }
+
+    // 모든 API 경로에 /api 접두사 추가
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.addPathPrefix("/api", c -> true);
     }
 }
