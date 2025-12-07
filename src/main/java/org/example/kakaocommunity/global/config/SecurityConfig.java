@@ -34,7 +34,7 @@ public class SecurityConfig {
 
                 // 요청 권한 설정
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/users", "/auth/**","images","/terms","/privacy").permitAll()
+                        .requestMatchers("api/health","api/users", "api/auth/**","api/images","api/terms","api/privacy").permitAll()
                         .anyRequest().authenticated())
 
                 // 기본 폼 로그인 비활성화
