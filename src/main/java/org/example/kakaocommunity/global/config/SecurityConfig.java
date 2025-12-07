@@ -69,7 +69,9 @@ public class SecurityConfig {
 
 //        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedOrigins(List.of(
-                "http://54.180.122.98/"
+                "https://leafiq.site",     // 실제 서비스 도메인
+                "https://www.leafiq.site", // www 서브도메인 쓰면 이것도
+                "http://localhost:3000"    // 로컬 개발용
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
