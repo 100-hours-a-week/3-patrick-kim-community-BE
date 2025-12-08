@@ -40,7 +40,11 @@ public class SecurityConfig {
 
                 // 요청 권한 설정
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/health","/api/users", "/api/auth/**","/api/images","/api/terms","/api/privacy").permitAll()
+                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/api/users").permitAll()  // POST 회원가입
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/images").permitAll()  // POST 이미지 업로드 (인증 불필요로 설정된 경우)
+                        .requestMatchers("/api/terms", "/api/privacy").permitAll()
                         .anyRequest().authenticated())
 
                 // 기본 폼 로그인 비활성화
@@ -73,7 +77,7 @@ public class SecurityConfig {
                 "https://www.leafiq.site", // www 서브도메인 쓰면 이것도
                 "http://localhost:3000"    // 로컬 개발용
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
 

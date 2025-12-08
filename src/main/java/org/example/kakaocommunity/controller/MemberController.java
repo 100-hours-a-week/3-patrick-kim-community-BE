@@ -23,7 +23,7 @@ public class MemberController {
     private final MemberService memberService;
 
     //회원정보 조회
-    @GetMapping("me")
+    @GetMapping("/me")
     public ApiResponse<MemberResponseDto.ProfileDto> getMemberInfo(
             @LoginUser Integer memberId
     ) {
