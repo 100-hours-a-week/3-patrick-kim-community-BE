@@ -88,7 +88,8 @@ src/main/java/org/example/kakaocommunity/
 
 ## API 문서
 
-자세한 API 명세는 [API-SPEC.md](./API-SPEC.md)를 참고하세요.
+자세한 API 명세는 
+https://vagabond-marimba-cb6.notion.site/LEAFIQ-API-2c35de28245780d28336d4ad3ce752d1 를 참고하세요
 
 
 ### 주요 엔드포인트
