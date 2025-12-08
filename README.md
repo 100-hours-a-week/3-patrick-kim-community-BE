@@ -12,7 +12,7 @@ Leafiq  RESTful API 서버입니다.
 - **QueryDSL** - 동적 쿼리 생성
 
 ### Database
-- **MySQL 9.4**
+- **MySQL
 
 ### Storage
 - **AWS S3** - 이미지 파일 저장
@@ -21,7 +21,7 @@ Leafiq  RESTful API 서버입니다.
 - **Thymeleaf** - 약관 페이지 렌더링
 
 ### Build Tool
-- **Gradle 8.5**
+- **Gradle
 
 ## 주요 기능
 
