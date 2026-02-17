@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public class TermsController {
 
     //MVC - 타임리프 템플릿을 제공
-    @GetMapping("terms")
+    @GetMapping("/terms")
     public String terms(Model model, HttpServletResponse response)
     {
 

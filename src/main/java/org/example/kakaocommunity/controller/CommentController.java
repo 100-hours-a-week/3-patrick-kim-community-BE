@@ -13,7 +13,7 @@ public class CommentController {
     private final CommentService commentService;
 
     // 댓글 삭제
-    @DeleteMapping("comments/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ApiResponse<String> deleteComment(
             @PathVariable Long commentId,
             @LoginUser Integer memberId
@@ -24,7 +24,7 @@ public class CommentController {
     }
 
     //댓글 수정
-    @PatchMapping("comments/{commentId}")
+    @PatchMapping("/comments/{commentId}")
     public ApiResponse<String> updateComment(
             @PathVariable Long commentId,
             @LoginUser Integer memberId,
