@@ -2,8 +2,10 @@ package org.example.kakaocommunity.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.kakaocommunity.entity.enums.Role;
 import org.example.kakaocommunity.global.common.BaseEntity;
 
+import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
@@ -19,7 +21,7 @@ public class Member extends BaseEntity {
 
     @Column(length = 10, nullable = false, unique = true)
     private String nickname;
-    @Column(length = 320, nullable = false,unique = true)
+    @Column(length = 320, nullable = false, unique = true)
     private String email;
     @Column(nullable = false)
     private String password;
@@ -27,6 +29,13 @@ public class Member extends BaseEntity {
     @OneToOne
     @JoinColumn(name = "image_id")
     private Image image;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    @Builder.Default
+    private Role role = Role.USER;
+
+    private LocalDateTime deletedAt;
 
     public void changePassword(String password) {
         this.password = password;
