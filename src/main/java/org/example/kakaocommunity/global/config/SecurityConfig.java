@@ -48,6 +48,8 @@ public class SecurityConfig {
                         // PetStar API (public endpoints)
                         .requestMatchers("/api/v1/challenges/**").permitAll()
                         .requestMatchers("/api/v1/entries/*/supports").permitAll()
+                        // Actuator (Prometheus 스크랩용)
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated())
 
                 // 기본 폼 로그인 비활성화
