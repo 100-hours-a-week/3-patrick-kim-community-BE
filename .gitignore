@@ -44,6 +44,7 @@ out/
 ### AWS Credentials ###
 .aws/
 credentials
+*.pem
 
 ### Logs ###
 logs/
@@ -52,3 +53,11 @@ logs/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+### Terraform ###
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
+!terraform/*.tfvars.example
+terraform/.terraform/
+terraform/.terraform.lock.hcl
