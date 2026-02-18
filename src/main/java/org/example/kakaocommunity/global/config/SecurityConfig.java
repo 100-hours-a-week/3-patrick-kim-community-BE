@@ -40,11 +40,13 @@ public class SecurityConfig {
 
                 // 요청 권한 설정
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/health").permitAll()
-                        .requestMatchers("/api/users").permitAll()  // POST 회원가입
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/images").permitAll()  // POST 이미지 업로드 (인증 불필요로 설정된 경우)
-                        .requestMatchers("/api/terms", "/api/privacy").permitAll()
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/users").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/images").permitAll()
+                        .requestMatchers("/terms", "/privacy").permitAll()
+                        // PetStar API
+                        .requestMatchers("/v1/challenges/**").permitAll()
                         .anyRequest().authenticated())
 
                 // 기본 폼 로그인 비활성화
