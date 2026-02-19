@@ -48,8 +48,8 @@ public class ChallengeService {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._NOTFOUND));
 
-        // 최적화: DB에서 LIMIT 적용 (100K → limit개만 조회)
-        List<Entry> entries = entryRepository.findByChallengeIdOrderByVoteCountDesc(
+        // 최적화: Fetch Join + Pageable (N+1 해결 + DB LIMIT)
+        List<Entry> entries = entryRepository.findTopEntriesWithFetchJoin(
                 challengeId, PageRequest.of(0, limit));
 
         return entries.stream()
