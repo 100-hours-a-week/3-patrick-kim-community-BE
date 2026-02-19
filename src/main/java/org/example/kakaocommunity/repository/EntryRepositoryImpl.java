@@ -18,8 +18,11 @@ public class EntryRepositoryImpl implements EntryRepositoryCustom {
 
     @Override
     public List<Entry> findEntriesByChallengeWithCursor(Long challengeId, Long cursorId, int limit) {
+        // 최적화: Fetch Join으로 N+1 해결 (Pet, Image 함께 로드)
         return queryFactory
                 .selectFrom(entry)
+                .join(entry.pet).fetchJoin()
+                .join(entry.image).fetchJoin()
                 .where(
                         entry.challenge.id.eq(challengeId),
                         cursorIdCondition(cursorId)
