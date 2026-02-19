@@ -1,5 +1,14 @@
 # 개발 환경 설정
 spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 30        # 기본값 10 → 30으로 증가
+      minimum-idle: 10             # 최소 유휴 커넥션
+      connection-timeout: 30000    # 커넥션 획득 타임아웃 (30초)
+      idle-timeout: 600000         # 유휴 커넥션 유지 시간 (10분)
+      max-lifetime: 1800000        # 커넥션 최대 수명 (30분)
+      pool-name: PetStarHikariCP
+
   jpa:
     hibernate:
       ddl-auto: update
