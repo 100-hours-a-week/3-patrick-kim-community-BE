@@ -11,6 +11,7 @@ import org.example.kakaocommunity.global.exception.GeneralException;
 import org.example.kakaocommunity.mapper.ChallengeMapper;
 import org.example.kakaocommunity.repository.ChallengeRepository;
 import org.example.kakaocommunity.repository.EntryRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,10 +48,11 @@ public class ChallengeService {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._NOTFOUND));
 
-        List<Entry> entries = entryRepository.findByChallengeIdOrderByVoteCountDesc(challengeId);
+        // 최적화: DB에서 LIMIT 적용 (100K → limit개만 조회)
+        List<Entry> entries = entryRepository.findByChallengeIdOrderByVoteCountDesc(
+                challengeId, PageRequest.of(0, limit));
 
         return entries.stream()
-                .limit(limit)
                 .map(ChallengeMapper::toRankingEntry)
                 .collect(Collectors.toList());
     }
