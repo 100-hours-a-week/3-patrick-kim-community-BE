@@ -1,0 +1,42 @@
+[
+  {
+    "email": "loadtest1@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest2@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest3@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest4@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest5@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest6@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest7@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest8@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest9@kakao.kr",
+    "password": "test1234"
+  },
+  {
+    "email": "loadtest10@kakao.kr",
+    "password": "test1234"
+  }
+]

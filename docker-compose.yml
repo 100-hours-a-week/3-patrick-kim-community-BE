@@ -32,5 +32,5 @@ services:
   #   image: redis:7-alpine
   #   container_name: petstar-redis
   #   ports:
-  #     - "6379:6379"
+  #     - "6379:63719"
   #   restart: unless-stopped

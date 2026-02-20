@@ -43,4 +43,17 @@ public class ChallengeMapper {
                 .voteCount(entry.getVoteCount())
                 .build();
     }
+
+    /**
+     * Redis에서 가져온 실시간 voteCount를 사용하는 버전
+     */
+    public static ChallengeResponseDto.RankingEntry toRankingEntryWithVoteCount(Entry entry, int voteCount) {
+        return ChallengeResponseDto.RankingEntry.builder()
+                .rank(rankCounter.incrementAndGet())
+                .entryId(entry.getId())
+                .petName(entry.getPet().getName())
+                .imageUrl(entry.getImage() != null ? entry.getImage().getUrl() : null)
+                .voteCount(voteCount)
+                .build();
+    }
 }

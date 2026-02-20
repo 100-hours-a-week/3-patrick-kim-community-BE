@@ -58,3 +58,19 @@ output "app_url" {
   description = "Application URL"
   value       = "http://${aws_eip.app.public_ip}:8080"
 }
+
+# SQS Outputs (Phase 10)
+output "sqs_votes_queue_url" {
+  description = "SQS votes queue URL"
+  value       = aws_sqs_queue.votes.url
+}
+
+output "sqs_votes_queue_arn" {
+  description = "SQS votes queue ARN"
+  value       = aws_sqs_queue.votes.arn
+}
+
+output "sqs_votes_dlq_url" {
+  description = "SQS votes dead letter queue URL"
+  value       = aws_sqs_queue.votes_dlq.url
+}

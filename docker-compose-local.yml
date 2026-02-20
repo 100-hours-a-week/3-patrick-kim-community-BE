@@ -1,0 +1,54 @@
+version: '3.8'
+
+# 로컬 개발 환경용 Docker Compose
+# 사용법: docker-compose -f docker-compose-local.yml up -d
+
+services:
+  # MySQL 로컬 개발용
+  mysql:
+    image: mysql:8.0
+    container_name: petstar-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: petstar
+      MYSQL_USER: petstar
+      MYSQL_PASSWORD: petstar123
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+
+  # Redis 로컬 개발용
+  redis:
+    image: redis:7-alpine
+    container_name: petstar-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # LocalStack (AWS 서비스 에뮬레이션)
+  # Phase 10: SQS 로컬 테스트용
+  localstack:
+    image: localstack/localstack:3.0
+    container_name: petstar-localstack
+    ports:
+      - "4566:4566"           # LocalStack Gateway
+      - "4510-4559:4510-4559" # External services port range
+    environment:
+      - SERVICES=sqs
+      - DEFAULT_REGION=ap-northeast-2
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEBUG=1
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./localstack-init:/etc/localstack/init/ready.d
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  localstack-data:

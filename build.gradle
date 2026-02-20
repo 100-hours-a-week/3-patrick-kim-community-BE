@@ -62,6 +62,13 @@ dependencies {
 
     // Query Logging
     implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.2'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // AWS SQS (Phase 10: Async Vote Processing)
+    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1')
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
 }
 
 tasks.named('test') {
