@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/kimyuchan?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=TRUE
     username: root
-    password: __DB_PASSWORD_REMOVED__
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -22,7 +22,7 @@ logging:
     org.hibernate.SQL: debug
 
 jwt:
-  secret: __JWT_SECRET_REMOVED__
+  secret: ${JWT_SECRET}
   access-token-expiration: 1500000  # 15분 (밀리초)
   refresh-token-expiration: 604800000  # 7일 (밀리초)
 
@@ -31,8 +31,8 @@ spring.cloud.aws:
   s3:
     bucket: kakao-community-bucket  # 본인의 S3 버킷 이름으로 변경
   credentials:
-    accessKey: __AWS_ACCESS_KEY_REMOVED__  # 본인의 AWS Access Key로 변경
-    secretKey: __AWS_SECRET_KEY_REMOVED__  # 본인의 AWS Secret Key로 변경
+    accessKey: ${AWS_ACCESS_KEY}
+    secretKey: ${AWS_SECRET_KEY}
   region:
     static: ap-northeast-2  # 서울 리전
   stack:
