@@ -14,6 +14,8 @@ import org.example.kakaocommunity.messaging.VoteProducer;
 import org.example.kakaocommunity.repository.EntryRepository;
 import org.example.kakaocommunity.repository.MemberRepository;
 import org.example.kakaocommunity.repository.VoteRepository;
+import java.util.List;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
@@ -95,31 +97,26 @@ public class VoteService {
         return vote(entryId, memberId, strategy);
     }
 
-    // ========== 전략 5: Async (SQS) - Phase 10-2b Hybrid ==========
+    // ========== 전략 5: Async (SQS) + Circuit Breaker ==========
     /**
-     * 비동기 투표: 하이브리드 전략 (DB 중복체크 + Redis 랭킹 + SQS 비동기)
+     * 비동기 투표: Redis 중복체크 + 랭킹 + SQS 비동기
      *
-     * Phase 10-2b 하이브리드 최적화:
-     * - 중복 체크: DB (HikariCP 30개 커넥션 병렬 처리)
-     * - 랭킹: Redis (ZINCRBY + ZSCORE = 2회 호출)
-     * - SQS 전송: Fire & Forget (비동기)
+     * Circuit Breaker:
+     * - CLOSED: Redis + SQS 비동기 투표 (정상)
+     * - OPEN: Redis 장애 감지 → 자동으로 Pessimistic Lock Fallback
+     * - HALF_OPEN: Redis 복구 확인 후 비동기 복귀
      *
-     * 왜 하이브리드인가?
-     * - Redis 4회 호출 (hasVoted + recordVote + incrementVote + getScore)은
-     *   Lettuce 단일 커넥션에서 직렬화되어 50명 동시 요청 시 1.3s 소요
-     * - DB 중복 체크는 HikariCP 30개 커넥션으로 병렬 처리 가능
-     * - Redis 호출을 4회 → 2회로 줄여 병목 완화
+     * Graceful Degradation (Phase 11):
+     * - SQS 전송 실패 시 → sync DB fallback (Redis 롤백하지 않고 DB 직접 저장)
+     * - Redis 장애 시 → Circuit Breaker → votePessimistic()
+     * - 둘 다 장애 시 → DB-only 모드 (votePessimistic + Redis best-effort)
      *
-     * 흐름:
-     * 1. DB 중복 투표 체크 (HikariCP 병렬, ~10ms)
-     * 2. Entry 조회 + 검증 (~5ms)
-     * 3. Redis 랭킹 업데이트 (ZINCRBY ~5ms)
-     * 4. SQS 비동기 전송 (Fire & Forget ~0ms)
-     * 5. Redis 득표수 조회 (ZSCORE ~5ms)
-     * 6. 즉시 응답 반환
-     *
-     * 예상 응답시간: p95 ~400ms (50명 동시, 기존 1.3s 대비 70% 개선)
+     * Pipeline (1 DB + 1 Redis RTT):
+     * - Entry 조회: DB findById
+     * - 중복체크 + 랭킹: Redis Pipeline (SADD + ZINCRBY + ZSCORE = 1 RTT)
+     * - SQS 전송: 실패 시 sync DB fallback
      */
+    @CircuitBreaker(name = "redisVote", fallbackMethod = "voteFallback")
     public VoteResponseDto.VoteResult voteAsync(Long entryId, Integer memberId) {
         // SQS 미설정 시 pessimistic으로 fallback
         if (voteProducer == null) {
@@ -127,39 +124,61 @@ public class VoteService {
             return self.votePessimistic(entryId, memberId);
         }
 
-        // 1. DB 중복 투표 체크 (Phase 10-2b: HikariCP 30개 커넥션 병렬 처리)
-        if (voteRepository.existsByEntryIdAndMemberId(entryId, memberId)) {
-            log.debug("[VoteAsync] Duplicate vote rejected (DB): entryId={}, memberId={}",
-                    entryId, memberId);
-            throw new GeneralException(ErrorStatus._BAD_REQUEST);
-        }
-
-        // 2. Entry 조회 + 검증
+        // 1. Entry 조회 + 검증 (DB 1회 — 유일한 DB 호출)
         Entry entry = entryRepository.findById(entryId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._NOTFOUND));
-
         validateVote(entry, memberId);
 
         Long challengeId = entry.getChallenge().getId();
 
-        // 3. Redis 랭킹 업데이트 (ZINCRBY)
-        rankingRedisService.incrementVote(challengeId, entryId);
+        // 2. Redis Pipeline: SADD(중복체크) + ZINCRBY(랭킹) + ZSCORE(점수) = 1 RTT
+        List<Object> results = rankingRedisService.recordAndIncrementPipelined(entryId, memberId, challengeId);
 
-        // 4. SQS 메시지 전송 (Fire & Forget - 비동기)
+        // results[0] = SADD 결과 (Long): 1=신규, 0=중복
+        // results[1] = ZINCRBY 결과 (Double)
+        // results[2] = ZSCORE 결과 (Double)
+        Long added = (Long) results.get(0);
+        if (added == 0L) {
+            // 중복 투표 — Pipeline에서 이미 ZINCRBY한 것을 롤백
+            rankingRedisService.decrementVote(challengeId, entryId);
+            throw new GeneralException(ErrorStatus._BAD_REQUEST);
+        }
+
+        Double score = (Double) results.get(2);
+        int currentVoteCount = score != null ? score.intValue() : 0;
+
+        // 3. SQS 동기 전송 + 실패 시 sync DB fallback
         VoteMessage message = VoteMessage.create(memberId, entryId, challengeId);
-        voteProducer.sendVote(message);
+        try {
+            voteProducer.sendVote(message);
+        } catch (Exception e) {
+            // SQS 장애 → Redis는 이미 반영됨, DB에 직접 동기 저장으로 fallback
+            log.warn("[VoteAsync] SQS unavailable, falling back to sync DB write: entryId={}, memberId={}, error={}",
+                    entryId, memberId, e.getMessage());
+            syncWriteToDb(entryId, memberId);
+        }
 
-        log.debug("[VoteAsync] Vote queued: entryId={}, memberId={}, voteId={}",
+        log.debug("[VoteAsync] Vote processed: entryId={}, memberId={}, voteId={}",
                 entryId, memberId, message.getVoteId());
-
-        // 5. Redis에서 현재 득표수 조회 (ZSCORE)
-        Double redisScore = rankingRedisService.getScore(challengeId, entryId);
-        int currentVoteCount = redisScore != null ? redisScore.intValue() : entry.getVoteCount() + 1;
 
         return VoteResponseDto.VoteResult.builder()
                 .entryId(entryId)
                 .voteCount(currentVoteCount)
                 .build();
+    }
+
+    /**
+     * Circuit Breaker Fallback: Redis 장애 시 Pessimistic Lock으로 자동 전환
+     *
+     * OPEN 상태에서 호출됨:
+     * - 느리지만(p95 1.73s) 서비스 중단 없이 투표 처리
+     * - DB Lock 기반이므로 Redis 없이도 정합성 보장
+     * - Redis 복구 후 HALF_OPEN → CLOSED로 자동 복귀
+     */
+    public VoteResponseDto.VoteResult voteFallback(Long entryId, Integer memberId, Exception e) {
+        log.warn("[CircuitBreaker] Redis unavailable, falling back to pessimistic lock: entryId={}, cause={}",
+                entryId, e.getClass().getSimpleName());
+        return self.votePessimistic(entryId, memberId);
     }
 
     // ========== 전략 1: Pessimistic Lock ==========
@@ -193,8 +212,14 @@ public class VoteService {
         voteRepository.save(vote);
         entry.increaseVoteCount();
 
-        // Redis 랭킹 업데이트
-        rankingRedisService.incrementVote(entry.getChallenge().getId(), entryId);
+        // Redis 랭킹 업데이트 — best-effort (Redis 장애 시에도 DB 저장은 유지)
+        // Circuit Breaker fallback으로 이 메서드가 호출될 때 Redis가 아직 죽어있을 수 있음
+        // Redis 실패 시 정합성 스케줄러(5분 주기)가 DB 기준으로 동기화
+        try {
+            rankingRedisService.incrementVote(entry.getChallenge().getId(), entryId);
+        } catch (Exception ex) {
+            log.warn("[VotePessimistic] Redis update failed, will be synced by consistency scheduler: entryId={}", entryId);
+        }
 
         return VoteResponseDto.VoteResult.builder()
                 .entryId(entryId)
@@ -361,6 +386,48 @@ public class VoteService {
                 .entryId(entryId)
                 .voteCount(currentVoteCount)
                 .build();
+    }
+
+    // ========== SQS 장애 시 동기 DB 저장 ==========
+
+    /**
+     * SQS 전송 실패 시 DB에 직접 동기 저장
+     *
+     * Phase 11: Graceful Degradation
+     * - Redis에는 이미 투표가 반영된 상태
+     * - SQS를 거치지 않고 Consumer와 동일한 로직으로 DB에 직접 저장
+     * - UK 제약조건으로 중복 방지
+     */
+    private void syncWriteToDb(Long entryId, Integer memberId) {
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                // 이미 DB에 저장되어 있으면 무시 (idempotency)
+                if (voteRepository.existsByEntryIdAndMemberId(entryId, memberId)) {
+                    return;
+                }
+
+                Entry entry = entryRepository.findById(entryId).orElse(null);
+                Member member = memberRepository.findById(memberId).orElse(null);
+                if (entry == null || member == null) {
+                    log.warn("[SyncWrite] Entry or Member not found: entryId={}, memberId={}", entryId, memberId);
+                    return;
+                }
+
+                Vote vote = Vote.builder()
+                        .entry(entry)
+                        .member(member)
+                        .build();
+                voteRepository.save(vote);
+                entryRepository.incrementVoteCount(entryId);
+            });
+            log.info("[SyncWrite] Vote saved directly to DB: entryId={}, memberId={}", entryId, memberId);
+        } catch (DataIntegrityViolationException e) {
+            // UK 위반 = 이미 저장됨, 무시
+            log.debug("[SyncWrite] Duplicate vote ignored: entryId={}, memberId={}", entryId, memberId);
+        } catch (Exception e) {
+            log.error("[SyncWrite] Failed to save vote to DB: entryId={}, memberId={}, error={}",
+                    entryId, memberId, e.getMessage());
+        }
     }
 
     // ========== 공통 ==========
