@@ -16,6 +16,12 @@ spring:
     redis:
       host: localhost
       port: 6379
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 1000ms
 
   jpa:
     hibernate:
@@ -41,6 +47,7 @@ spring:
 app:
   sqs:
     vote-queue-name: petstar-votes
+    dlq-name: petstar-votes-dlq
 
 logging:
   level:

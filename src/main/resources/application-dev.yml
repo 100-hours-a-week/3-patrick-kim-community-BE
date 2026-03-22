@@ -17,6 +17,12 @@ spring:
     redis:
       host: ${REDIS_HOST:43.201.243.102}
       port: ${REDIS_PORT:6379}
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 1000ms
 
   # AWS SQS 설정 (Phase 10)
   cloud:
@@ -39,6 +45,7 @@ spring:
 app:
   sqs:
     vote-queue-name: ${SQS_VOTE_QUEUE:petstar-votes}
+    dlq-name: ${SQS_DLQ_NAME:petstar-votes-dlq}
 
 logging:
   level:
@@ -46,15 +53,31 @@ logging:
     org.hibernate.SQL: INFO
     org.example.kakaocommunity: DEBUG
 
+# Resilience4j Circuit Breaker (Round 4: Redis 장애 Fallback)
+resilience4j:
+  circuitbreaker:
+    instances:
+      redisVote:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 80
+        register-health-indicator: true
+
 # Actuator 설정
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus,metrics,circuitbreakers,circuitbreakerevents
   endpoint:
     health:
       show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
   metrics:
     tags:
       application: petstar
