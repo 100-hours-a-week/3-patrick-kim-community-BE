@@ -40,13 +40,19 @@ public class SecurityConfig {
 
                 // 요청 권한 설정
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/health").permitAll()
-                        .requestMatchers("/users").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/images").permitAll()
-                        .requestMatchers("/terms", "/privacy").permitAll()
-                        // PetStar API
-                        .requestMatchers("/v1/challenges/**").permitAll()
+                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/api/users").permitAll()
+                        .requestMatchers("/auth", "/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/images").permitAll()
+                        .requestMatchers("/api/terms", "/api/privacy").permitAll()
+                        // PetStar API (public endpoints)
+                        .requestMatchers("/api/v1/challenges/**").permitAll()
+                        .requestMatchers("/api/v1/entries/*/supports").permitAll()
+                        // 동시성 테스트용 엔드포인트 (인증 없이 접근 가능)
+                        .requestMatchers("/api/v1/entries/*/votes/test").permitAll()
+                        // Actuator (Prometheus 스크랩용)
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated())
 
                 // 기본 폼 로그인 비활성화

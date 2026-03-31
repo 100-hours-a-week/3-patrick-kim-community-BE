@@ -1,0 +1,15 @@
+# Copy this file to terraform.tfvars and fill in the values
+# terraform.tfvars is gitignored
+
+aws_region  = "ap-northeast-2"
+environment = "dev"
+
+# SSH key pair name (must exist in AWS)
+key_name = "petstar-key"
+
+# Your IP for SSH access (use https://checkip.amazonaws.com to find your IP)
+my_ip = "YOUR_IP/32"
+
+# RDS credentials
+db_username = "admin"
+db_password = "CHANGE_THIS_PASSWORD"

@@ -1,19 +1,27 @@
-# 1. Build stage
-FROM gradle:8.5-jdk21 AS build
+FROM eclipse-temurin:21-jre-alpine
+
 WORKDIR /app
 
-COPY build.gradle settings.gradle ./
-COPY src ./src
+# Add non-root user for security
+RUN addgroup -S spring && adduser -S spring -G spring
 
-# 테스트는 CI 단계에서 이미 했으므로 생략(-x test)하고, bootJar만 빌드
-RUN gradle bootJar -x test --no-daemon
+# Copy JAR file
+COPY build/libs/*.jar app.jar
 
-# 2. Run stage
-FROM eclipse-temurin:21-jre
-WORKDIR /app
+# Set ownership
+RUN chown -R spring:spring /app
 
-COPY --from=build /app/build/libs/*SNAPSHOT.jar app.jar
+USER spring
 
+# Expose port
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# JVM options for performance
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+# Run application with JVM options
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

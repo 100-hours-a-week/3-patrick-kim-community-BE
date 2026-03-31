@@ -1,0 +1,83 @@
+# 개발 환경 설정
+spring:
+  datasource:
+    url: jdbc:mysql://petstar-db.cpwka4iukgmy.ap-northeast-2.rds.amazonaws.com:3306/petstar?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: admin
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: PetStarHikariCP
+
+  data:
+    redis:
+      host: ${REDIS_HOST:43.201.243.102}
+      port: ${REDIS_PORT:6379}
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 1000ms
+
+  # AWS SQS 설정 (Phase 10)
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      sqs:
+        enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    show-sql: false
+
+# 애플리케이션 커스텀 설정
+app:
+  sqs:
+    vote-queue-name: ${SQS_VOTE_QUEUE:petstar-votes}
+    dlq-name: ${SQS_DLQ_NAME:petstar-votes-dlq}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: INFO
+    org.example.kakaocommunity: DEBUG
+
+# Resilience4j Circuit Breaker (Round 4: Redis 장애 Fallback)
+resilience4j:
+  circuitbreaker:
+    instances:
+      redisVote:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 80
+        register-health-indicator: true
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: petstar

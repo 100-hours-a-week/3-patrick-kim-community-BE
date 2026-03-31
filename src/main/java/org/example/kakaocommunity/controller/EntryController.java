@@ -44,9 +44,29 @@ public class EntryController {
     @PostMapping("/{entryId}/votes")
     public ResponseEntity<ApiResponse<VoteResponseDto.VoteResult>> vote(
             @PathVariable Long entryId,
-            @LoginUser Integer memberId
+            @LoginUser Integer memberId,
+            @RequestParam(defaultValue = "atomic") String strategy
     ) {
-        VoteResponseDto.VoteResult response = voteService.vote(entryId, memberId);
+        VoteResponseDto.VoteResult response = voteService.vote(entryId, memberId, strategy);
+        return ResponseEntity.status(SuccessStatus._CREATED.getCode())
+                .body(ApiResponse.of(SuccessStatus._CREATED, response));
+    }
+
+    /**
+     * 테스트용 투표 엔드포인트 (인증 없이, 동시성 제어 전략 비교용)
+     *
+     * 사용법:
+     * POST /v1/entries/{entryId}/votes/test?memberId=123&strategy=pessimistic
+     * POST /v1/entries/{entryId}/votes/test?memberId=123&strategy=optimistic
+     * POST /v1/entries/{entryId}/votes/test?memberId=123&strategy=atomic
+     */
+    @PostMapping("/{entryId}/votes/test")
+    public ResponseEntity<ApiResponse<VoteResponseDto.VoteResult>> voteTest(
+            @PathVariable Long entryId,
+            @RequestParam Integer memberId,
+            @RequestParam(defaultValue = "pessimistic") String strategy
+    ) {
+        VoteResponseDto.VoteResult response = voteService.vote(entryId, memberId, strategy);
         return ResponseEntity.status(SuccessStatus._CREATED.getCode())
                 .body(ApiResponse.of(SuccessStatus._CREATED, response));
     }

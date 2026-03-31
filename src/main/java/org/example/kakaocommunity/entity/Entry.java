@@ -48,6 +48,11 @@ public class Entry extends BaseEntity {
     @ColumnDefault("0")
     private int voteCount;
 
+    // 전략 2: Optimistic Lock용 버전 관리
+    @Version
+    @ColumnDefault("0")
+    private Long version = 0L;
+
     @OneToMany(mappedBy = "entry", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Vote> votes = new ArrayList<>();

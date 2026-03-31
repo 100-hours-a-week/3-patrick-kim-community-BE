@@ -1,0 +1,14 @@
+.git
+.gradle
+.idea
+*.iml
+.env
+*.log
+terraform
+context
+src
+build/classes
+build/generated
+build/reports
+build/resources
+build/tmp

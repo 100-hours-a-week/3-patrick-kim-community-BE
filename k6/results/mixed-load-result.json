@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-13T11:41:00.788Z",
+  "metrics": {
+    "http_req_duration_p95": 48.22439999999995,
+    "http_reqs_rate": 220.5063954169471,
+    "error_rate": 0.004297575426834022,
+    "read_challenge_list_p95": 66.43299999999991,
+    "read_ranking_p95": 38.19909999999995,
+    "read_entries_p95": 48.91449999999993,
+    "write_vote_p95": 77.11879999999994,
+    "vote_success": 10836,
+    "vote_duplicate": 631
+  }
+}

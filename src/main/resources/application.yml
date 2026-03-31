@@ -4,14 +4,14 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
   datasource:
-    url: jdbc:mysql://${DB_HOST}:3306/${DB_NAME}?serverTimezone=UTC&useSSL=false
-    username: ${DB_USERNAME}
+    url: jdbc:mysql://localhost:3306/kimyuchan?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=TRUE
+    username: root
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update   # 개발 중에는 create / create-drop / update 중 선택
     properties:
       hibernate:
         format_sql: true
@@ -23,16 +23,17 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiration: 1500000
-  refresh-token-expiration: 604800000
+  access-token-expiration: 1500000  # 15분 (밀리초)
+  refresh-token-expiration: 604800000  # 7일 (밀리초)
+
 
 spring.cloud.aws:
   s3:
-    bucket: ${S3_BUCKET_NAME}
+    bucket: kakao-community-bucket  # 본인의 S3 버킷 이름으로 변경
   credentials:
     accessKey: ${AWS_ACCESS_KEY}
     secretKey: ${AWS_SECRET_KEY}
   region:
-    static: ap-northeast-2
+    static: ap-northeast-2  # 서울 리전
   stack:
     auto: false

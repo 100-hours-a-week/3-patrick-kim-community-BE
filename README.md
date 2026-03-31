@@ -12,7 +12,7 @@ Leafiq  RESTful API 서버입니다.
 - **QueryDSL** - 동적 쿼리 생성
 
 ### Database
-- **MySQL**
+- **MySQL 9.4**
 
 ### Storage
 - **AWS S3** - 이미지 파일 저장
@@ -21,7 +21,7 @@ Leafiq  RESTful API 서버입니다.
 - **Thymeleaf** - 약관 페이지 렌더링
 
 ### Build Tool
-- **Gradle**
+- **Gradle 8.5**
 
 ## 주요 기능
 
@@ -86,46 +86,99 @@ src/main/java/org/example/kakaocommunity/
 - MySQL 8.x
 - AWS S3 버킷 (이미지 저장용)
 
+
+### 빌드 및 실행
+
+1. **프로젝트 클론**
+```bash
+git clone <repository-url>
+cd kakao-community
+```
+
+2. **빌드**
+```bash
+./gradlew clean build
+```
+
+3. **실행**
+```bash
+./gradlew bootRun
+```
+
+또는 JAR 파일 직접 실행:
+```bash
+java -jar build/libs/kakao-community-0.0.1-SNAPSHOT.jar
+```
+
+4. **애플리케이션 확인**
+```bash
+curl http://localhost:8080/health
+# 응답: OK
+```
+
+### Docker로 실행
+
+1. **이미지 빌드**
+```bash
+docker build -t kakao-community .
+```
+
+2. **컨테이너 실행**
+```bash
+docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/kakao_community \
+  -e SPRING_DATASOURCE_USERNAME=your_db_username \
+  -e SPRING_DATASOURCE_PASSWORD=your_db_password \
+  -e CLOUD_AWS_CREDENTIALS_ACCESS_KEY=your_aws_access_key \
+  -e CLOUD_AWS_CREDENTIALS_SECRET_KEY=your_aws_secret_key \
+  -e JWT_SECRET=your_jwt_secret_key \
+  kakao-community
+```
+
 ## API 문서
 
-자세한 API 명세는 
-https://vagabond-marimba-cb6.notion.site/LEAFIQ-API-2c35de28245780d28336d4ad3ce752d1 를 참고하세요
+자세한 API 명세는 [API-SPEC.md](context/API-SPEC.md)를 참고하세요.
 
 
 ### 주요 엔드포인트
 
 #### 인증
-- `POST /api/auth` - 로그인
-- `DELETE /api/auth` - 로그아웃
-- `POST /api/auth/refresh` - 토큰 갱신
+- `POST /auth` - 로그인
+- `DELETE /auth` - 로그아웃
+- `POST /auth/refresh` - 토큰 갱신
 
 #### 회원
-- `POST /api/users` - 회원가입
-- `GET /api/users/me` - 내 정보 조회
-- `PATCH /api/users/me` - 프로필 수정
-- `PATCH /api/users/me/password` - 비밀번호 변경
-- `DELETE /api/users/me` - 회원 탈퇴
+- `POST /users` - 회원가입
+- `GET /users/me` - 내 정보 조회
+- `PATCH /users/me` - 프로필 수정
+- `PATCH /users/me/password` - 비밀번호 변경
+- `DELETE /users/me` - 회원 탈퇴
 
 #### 게시글
-- `POST /api/posts` - 게시글 작성
-- `GET /api/posts` - 게시글 목록 조회 (커서 페이징)
-- `GET /api/posts/{postId}` - 게시글 상세 조회
-- `PATCH /api/posts/{postId}` - 게시글 수정
-- `DELETE /api/posts/{postId}` - 게시글 삭제
+- `POST /posts` - 게시글 작성
+- `GET /posts` - 게시글 목록 조회 (커서 페이징)
+- `GET /posts/{postId}` - 게시글 상세 조회
+- `PATCH /posts/{postId}` - 게시글 수정
+- `DELETE /posts/{postId}` - 게시글 삭제
 
 #### 댓글
-- `POST /api/posts/{postId}/comments` - 댓글 작성
-- `GET /api/posts/{postId}/comments` - 댓글 목록 조회
-- `PATCH /api/comments/{commentId}` - 댓글 수정
-- `DELETE /api/comments/{commentId}` - 댓글 삭제
+- `POST /posts/{postId}/comments` - 댓글 작성
+- `GET /posts/{postId}/comments` - 댓글 목록 조회
+- `PATCH /comments/{commentId}` - 댓글 수정
+- `DELETE /comments/{commentId}` - 댓글 삭제
 
 #### 좋아요
-- `POST /api/posts/{postId}/likes` - 좋아요 추가
-- `DELETE /api/posts/{postId}/likes` - 좋아요 삭제
+- `POST /posts/{postId}/likes` - 좋아요 추가
+- `DELETE /posts/{postId}/likes` - 좋아요 삭제
 
 #### 이미지
-- `POST /api/images` - 이미지 업로드
-- `DELETE /api/images/{imageId}` - 이미지 삭제
+- `POST /images` - 이미지 업로드
+- `DELETE /images/{imageId}` - 이미지 삭제
+
+#### 기타
+- `GET /health` - 헬스체크
+- `GET /terms` - 이용약관 페이지
+- `GET /privacy` - 개인정보처리방침 페이지
 
 ### 인증 방식
 

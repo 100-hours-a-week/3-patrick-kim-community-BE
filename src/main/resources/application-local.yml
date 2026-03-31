@@ -1,0 +1,56 @@
+# 로컬 개발 환경 설정 (LocalStack 사용)
+# 사용법: -Dspring.profiles.active=local
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/petstar?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    username: petstar
+    password: petstar123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 1000ms
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    show-sql: false
+
+  # LocalStack SQS 설정
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: test
+        secret-key: test
+      sqs:
+        endpoint: http://localhost:4566
+
+# 애플리케이션 커스텀 설정
+app:
+  sqs:
+    vote-queue-name: petstar-votes
+    dlq-name: petstar-votes-dlq
+
+logging:
+  level:
+    root: INFO
+    org.example.kakaocommunity: DEBUG
+    io.awspring.cloud: DEBUG
